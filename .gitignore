@@ -1,5 +1,5 @@
-hw1/behavior_cloning
-hw1/DAgger
+hw1/behavior_cloning/
+hw1/DAgger/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
