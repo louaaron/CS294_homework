@@ -16,3 +16,7 @@ Note that these dependencies were unavailable/ unworkable at the time of this co
 ## Homework 1
 
 The course, up to this point, has covered more basic supervised learning. I implemented BC (behavior cloning) and DAgger (Dataset Aggregation), which improved the results (slightly). I also experimented with various hyperparameters. 
+
+## Homework 2
+
+I implemented the policy gradient algorithm and ran some tests on various environments. I played with the hyperparameters and saw that my implementation caused the agent's reward to converge to the theoretical value. I also implemented GAE (generalized advantage estimation) and compared its results. 
