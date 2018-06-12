@@ -20,3 +20,8 @@ The course, up to this point, has covered more basic supervised learning. I impl
 ## Homework 2
 
 I implemented the policy gradient algorithm and ran some tests on various environments. I played with the hyperparameters and saw that my implementation caused the agent's reward to converge to the theoretical value. I also implemented GAE (generalized advantage estimation) and compared its results. 
+
+## Homework 3
+
+I implemented the DQN algorithm and ran it on the Atari Pong simulator. I experimented with different hyperparameters and saw that my model converged to the perfect value.
+

@@ -127,7 +127,17 @@ def learn(env,
     # Older versions of TensorFlow may require using "VARIABLES" instead of "GLOBAL_VARIABLES"
     ######
     
-    # YOUR CODE HERE
+    q_t = q_func(obs_t_float, num_actions, scope = "q_func", reuse = False)
+    q_t1 = q_func(obs_tp1_float, num_actions, scope = "target_q_func", reuse = False)
+    best_action = tf.argmax(q_t, axis = 1)
+    max_q = tf.reduce_max(q_t1, axis = 1)
+    y = rew_t_ph + gamma * tf.multiply((1.0 - done_mask_ph), max_q)
+    q_t_taken = tf.reduce_sum(tf.multiply(q_t, tf.one_hot(act_t_ph, num_actions)), axis = 1)
+
+    total_error = tf.losses.mean_squared_error(y, q_t_taken)
+
+    q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q_func')
+    target_q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='target_q_func')
 
     ######
 
@@ -155,7 +165,7 @@ def learn(env,
     mean_episode_reward      = -float('nan')
     best_mean_episode_reward = -float('inf')
     last_obs = env.reset()
-    LOG_EVERY_N_STEPS = 10000
+    LOG_EVERY_N_STEPS = 1000 #10000
 
     for t in itertools.count():
         ### 1. Check stopping criterion
@@ -194,7 +204,22 @@ def learn(env,
 
         #####
         
-        # YOUR CODE HERE
+        idx = replay_buffer.store_frame(last_obs)
+
+        if not model_initialized:
+            action = random.randint(0, num_actions - 1)
+        else:
+            obs = replay_buffer.encode_recent_observation()
+            action = session.run(best_action, feed_dict = {obs_t_ph: [obs]})
+            if random.random() < exploration.value(t) * num_actions / (num_actions - 1):
+                action = random.randint(0, num_actions - 1)
+        
+        next_obs, reward, done, _ = env.step(action)
+        replay_buffer.store_effect(idx, action, reward, done)
+        if done:
+            last_obs = env.reset()
+        else:
+            last_obs = next_obs
 
         #####
 
@@ -243,9 +268,28 @@ def learn(env,
             # you should update every target_update_freq steps, and you may find the
             # variable num_param_updates useful for this (it was initialized to 0)
             #####
-            
-            # YOUR CODE HERE
+            obs_batch, act_batch, rew_batch, next_obs_batch, done_batch = replay_buffer.sample(batch_size)
 
+            if not model_initialized:
+                initialize_interdependent_variables(session, tf.global_variables(), {
+                    obs_t_ph: obs_batch,
+                    obs_tp1_ph: next_obs_batch,
+                }) 
+                model_initialized = True
+
+            session.run(train_fn, {
+                obs_t_ph: obs_batch,
+                act_t_ph: act_batch,
+                rew_t_ph: rew_batch,
+                obs_tp1_ph: next_obs_batch,
+                done_mask_ph: done_batch,
+                learning_rate: optimizer_spec.lr_schedule.value(t)
+            })
+
+            num_param_updates += 1
+            if num_param_updates % target_update_freq == 0:
+                session.run(update_target_fn)
+            
             #####
 
         ### 4. Log progress
