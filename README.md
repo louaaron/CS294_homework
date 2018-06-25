@@ -25,3 +25,35 @@ I implemented the policy gradient algorithm and ran some tests on various enviro
 
 I implemented the DQN algorithm and ran it on the Atari Pong simulator. I experimented with different hyperparameters and saw that my model converged to the perfect value.
 
+## Homework 4
+
+I implemented the MPC algorithm. However, I was unable to run the provided HalfCheetahEnvNew as it threw 
+
+~~~~
+'mujoco_py.cymj.PyMjModel' object has no attribute 'data'
+~~~~
+
+Furthermore, when I attempted to work with the given 'HalfCheetah-v2' environment that (in terms of raw code) is isomorphic to the HalfCheetahEnvNew, the action dimensions representing
+
+~~~~
+- rootx     slider      position (m)
+- rootz     slider      position (m)
+- rooty     hinge       angle (rad)
+- bthigh    hinge       angle (rad)
+- bshin     hinge       angle (rad)
+- bfoot     hinge       angle (rad)
+- fthigh    hinge       angle (rad)
+- fshin     hinge       angle (rad)
+- ffoot     hinge       angle (rad)
+- rootx     slider      velocity (m/s)
+- rootz     slider      velocity (m/s)
+- rooty     hinge       angular velocity (rad/s)
+- bthigh    hinge       angular velocity (rad/s)
+- bshin     hinge       angular velocity (rad/s)
+- bfoot     hinge       angular velocity (rad/s)
+- fthigh    hinge       angular velocity (rad/s)
+- fshin     hinge       angular velocity (rad/s)
+- ffoot     hinge       angular velocity (rad/s)
+~~~~
+
+Aren't correctly represented in the loss function (which assumes 18 dimensions).

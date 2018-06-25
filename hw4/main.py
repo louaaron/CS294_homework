@@ -10,6 +10,9 @@ import os
 import copy
 import matplotlib.pyplot as plt
 from cheetah_env import HalfCheetahEnvNew
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+from time import gmtime, strftime
 
 def sample(env, 
            controller, 
@@ -23,7 +26,30 @@ def sample(env,
         Each path can have elements for observations, next_observations, rewards, returns, actions, etc.
     """
     paths = []
-    """ YOUR CODE HERE """
+    iterator = range(num_paths)
+    if verbose:
+        iterator = tqdm(iterator)
+    for _ in iterator:
+        ob = env.reset()
+        if render:
+            env.render()
+        obs, next_obs, actions, rewards = [], [], [], []
+        steps = 0
+        while True:
+            obs.append(ob)
+            action = controller.get_action(ob)
+            actions.append(action)
+            ob, reward, done, _ = env.step(action)
+            next_obs.append(ob)
+            rewards.append(reward)
+            steps += 1
+            if done or steps >= horizon:
+                break
+        paths.append({
+            'observations': np.array(obs),
+            'actions': np.array(actions),
+            'next_observations': np.array(next_obs)
+        })
 
     return paths
 
@@ -36,8 +62,17 @@ def compute_normalization(data):
     Write a function to take in a dataset and compute the means, and stds.
     Return 6 elements: mean of s_t, std of s_t, mean of (s_t+1 - s_t), std of (s_t+1 - s_t), mean of actions, std of actions
     """
+    obs = np.concatenate([d['observations'] for d in data])
+    next_obs = np.concatenate([d['next_observations'] for d in data])
+    actions = np.concatenate([d['actions'] for d in data])
 
-    """ YOUR CODE HERE """
+    mean_obs = np.mean(obs)
+    std_obs = np.std(obs)
+    mean_deltas = np.mean(next_obs - obs)
+    std_deltas = np.std(next_obs - obs)
+    mean_action = np.mean(actions)
+    std_action = np.std(actions)
+
     return mean_obs, std_obs, mean_deltas, std_deltas, mean_action, std_action
 
 
@@ -45,8 +80,22 @@ def plot_comparison(env, dyn_model):
     """
     Write a function to generate plots comparing the behavior of the model predictions for each element of the state to the actual ground truth, using randomly sampled actions. 
     """
-    """ YOUR CODE HERE """
-    pass
+    real_obs, pred_obs = [], []
+    ob = env.reset()
+    i = 0
+    while True:
+        action = env.action_space.sample()
+        pred_ob = dyn_model.predict(ob, action)
+        real_ob, _, done, _ = env.step(action)
+        real_obs.append(real_ob)
+        pred_obs.append(pred_ob)
+        i += 1
+        if done:
+            break
+    abs_diff = np.abs(np.array(real_obs - pred_obs))
+    plt.plot(np.arange(i), abs_diff)
+    time_str = strftime("%Y-%m-%d_%H:%M:%S", gmtime())
+    plt.savefig("figures/" + time_str + ".png")
 
 def train(env, 
          cost_fn,
@@ -111,8 +160,7 @@ def train(env,
 
     random_controller = RandomController(env)
 
-    """ YOUR CODE HERE """
-
+    data = sample(env, random_controller, num_paths_random, env_horizon)
 
     #========================================================
     # 
@@ -122,7 +170,7 @@ def train(env,
     # for normalizing inputs and denormalizing outputs
     # from the dynamics network. 
     # 
-    normalization = """ YOUR CODE HERE """
+    normalization = compute_normalization(data)
 
 
     #========================================================
@@ -162,9 +210,12 @@ def train(env,
     # Note: You don't need to use a mixing ratio in this assignment for new and old data as described in https://arxiv.org/abs/1708.02596
     # 
     for itr in range(onpol_iters):
-        """ YOUR CODE HERE """
+        dyn_model.fit(data)
+        data_new = sample(env, mpc_controller, num_paths_onpol, env_horizon)
+        data = np.concatenate([data, data_new])
 
-
+        returns = [np.sum(path['reward']) for path in data_new]
+        costs = [path_cost(cost_fn, path) for path in data_new]
 
         # LOGGING
         # Statistics for performance of MPC policy using
@@ -223,7 +274,7 @@ def main():
 
     # Make env
     if args.env_name is "HalfCheetah-v1":
-        env = HalfCheetahEnvNew()
+        env = gym.make('HalfCheetah-v2')
         cost_fn = cheetah_cost_fn
     train(env=env, 
                  cost_fn=cost_fn,
