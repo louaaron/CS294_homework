@@ -449,7 +449,7 @@ def main():
     parser.add_argument('--exp_name', type=str, default='vpg')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--discount', type=float, default=1.0)
-    parser.add_argument('--lambda', type = float, default = 1.0)
+    parser.add_argument('--lambda_', type = float, default = 1.0)
     parser.add_argument('--n_iter', '-n', type=int, default=100)
     parser.add_argument('--batch_size', '-b', type=int, default=1000)
     parser.add_argument('--ep_len', '-ep', type=float, default=-1.)
@@ -481,7 +481,7 @@ def main():
                 env_name=args.env_name,
                 n_iter=args.n_iter,
                 gamma=args.discount,
-                _lambda = args._lambda,
+                _lambda = args.lambda_,
                 min_timesteps_per_batch=args.batch_size,
                 max_path_length=max_path_length,
                 learning_rate=args.learning_rate,
