@@ -56,4 +56,4 @@ Furthermore, when I attempted to work with the given 'HalfCheetah-v2' environmen
 - ffoot     hinge       angular velocity (rad/s)
 ~~~~
 
-Aren't correctly represented in the loss function (which assumes 18 dimensions).
+Aren't correctly represented in the loss function (the comments about what each part represents don't match up). Furthermore, for some strange reason, all HalfCheetah environments load in 17 variables, not 18. 
